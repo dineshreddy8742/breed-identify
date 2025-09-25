@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cattle Breed Identifier</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-shadow {
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .breed-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .breed-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useRef, useEffect } = React;
+
+        // Mock breed database
+        const breedDatabase = {
+            'Holstein': {
+                name: 'Holstein Friesian',
+                origin: 'Netherlands',
+                type: 'Dairy',
+                milkYield: '25-30 liters/day',
+                characteristics: 'Large size, black and white patches, excellent milk production',
+                care: 'Requires high-quality feed, regular milking, proper shelter',
+                image: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE1MCIgdmlld0JveD0iMCAwIDIwMCAxNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMTUwIiBmaWxsPSIjZjNmNGY2Ii8+CjxlbGxpcHNlIGN4PSIxMDAiIGN5PSI4MCIgcng9IjcwIiByeT0iNDAiIGZpbGw9IndoaXRlIiBzdHJva2U9IiMzMzMiIHN0cm9rZS13aWR0aD0iMiIvPgo8ZWxsaXBzZSBjeD0iODAiIGN5PSI2NSIgcng9IjE1IiByeT0iMjAiIGZpbGw9ImJsYWNrIi8+CjxlbGxpcHNlIGN4PSIxMjAiIGN5PSI2NSIgcng9IjE1IiByeT0iMjAiIGZpbGw9ImJsYWNrIi8+CjxyZWN0IHg9Ijg1IiB5PSI1NSIgd2lkdGg9IjMwIiBoZWlnaHQ9IjE1IiBmaWxsPSJibGFjayIvPgo8dGV4dCB4PSIxMDAiIHk9IjEzMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEyIiBmaWxsPSIjNjY2Ij5Ib2xzdGVpbiBGcmlzaWFuPC90ZXh0Pgo8L3N2Zz4='
+            },
+            'Jersey': {
+                name: 'Jersey',
+                origin: 'Jersey Island, UK',
+                type: 'Dairy',
+                milkYield: '15-20 liters/day',
+                characteristics: 'Small to medium size, light brown color, high butterfat content',
+                care: 'Adaptable to various climates, efficient feed conversion',
+                image: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE1MCIgdmlld0JveD0iMCAwIDIwMCAxNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMTUwIiBmaWxsPSIjZjNmNGY2Ii8+CjxlbGxpcHNlIGN4PSIxMDAiIGN5PSI4MCIgcng9IjYwIiByeT0iMzUiIGZpbGw9IiNEMkI0OEMiIHN0cm9rZT0iIzMzMyIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxjaXJjbGUgY3g9Ijg1IiBjeT0iNjUiIHI9IjMiIGZpbGw9ImJsYWNrIi8+CjxjaXJjbGUgY3g9IjExNSIgY3k9IjY1IiByPSIzIiBmaWxsPSJibGFjayIvPgo8ZWxsaXBzZSBjeD0iMTAwIiBjeT0iNzUiIHJ4PSI4IiByeT0iNCIgZmlsbD0iIzMzMyIvPgo8dGV4dCB4PSIxMDAiIHk9IjEzMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEyIiBmaWxsPSIjNjY2Ij5KZXJzZXk8L3RleHQ+Cjwvc3ZnPg=='
+            },
+            'Gir': {
+                name: 'Gir',
+                origin: 'Gujarat, India',
+                type: 'Dairy',
+                milkYield: '10-15 liters/day',
+                characteristics: 'White with red/brown patches, distinctive curved horns, heat tolerant',
+                care: 'Well adapted to hot climate, requires less water, disease resistant',
+                image: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE1MCIgdmlld0JveD0iMCAwIDIwMCAxNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMTUwIiBmaWxsPSIjZjNmNGY2Ii8+CjxlbGxpcHNlIGN4PSIxMDAiIGN5PSI4NSIgcng9IjY1IiByeT0iMzgiIGZpbGw9IndoaXRlIiBzdHJva2U9IiMzMzMiIHN0cm9rZS13aWR0aD0iMiIvPgo8ZWxsaXBzZSBjeD0iNzUiIGN5PSI3MCIgcng9IjEyIiByeT0iMTUiIGZpbGw9IiNEMjY5MUUiLz4KPGVsbGlwc2UgY3g9IjEyNSIgY3k9IjcwIiByeD0iMTIiIHJ5PSIxNSIgZmlsbD0iI0QyNjkxRSIvPgo8cGF0aCBkPSJNODUgNTBDODUgNDUgOTAgNDAgMTAwIDQwQzExMCA0MCAxMTUgNDUgMTE1IDUwIiBzdHJva2U9IiMzMzMiIHN0cm9rZS13aWR0aD0iMyIgZmlsbD0ibm9uZSIvPgo8Y2lyY2xlIGN4PSI4NSIgY3k9IjY1IiByPSIzIiBmaWxsPSJibGFjayIvPgo8Y2lyY2xlIGN4PSIxMTUiIGN5PSI2NSIgcj0iMyIgZmlsbD0iYmxhY2siLz4KPHRleHQgeD0iMTAwIiB5PSIxMzAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzY2NiI+R2lyPC90ZXh0Pgo8L3N2Zz4='
+            },
+            'Sahiwal': {
+                name: 'Sahiwal',
+                origin: 'Punjab, Pakistan/India',
+                type: 'Dairy',
+                milkYield: '8-12 liters/day',
+                characteristics: 'Reddish brown color, loose skin, heat tolerant, good mothering ability',
+                care: 'Suitable for hot climate, low maintenance, good grazing ability',
+                image: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE1MCIgdmlld0JveD0iMCAwIDIwMCAxNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMTUwIiBmaWxsPSIjZjNmNGY2Ii8+CjxlbGxpcHNlIGN4PSIxMDAiIGN5PSI4NSIgcng9IjY4IiByeT0iNDAiIGZpbGw9IiNBNjUyMkQiIHN0cm9rZT0iIzMzMyIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxjaXJjbGUgY3g9Ijg1IiBjeT0iNjgiIHI9IjMiIGZpbGw9ImJsYWNrIi8+CjxjaXJjbGUgY3g9IjExNSIgY3k9IjY4IiByPSIzIiBmaWxsPSJibGFjayIvPgo8ZWxsaXBzZSBjeD0iMTAwIiBjeT0iNzgiIHJ4PSI4IiByeT0iNCIgZmlsbD0iIzMzMyIvPgo8cGF0aCBkPSJNODAgNTVMODUgNDVNMTIwIDU1TDExNSA0NSIgc3Ryb2tlPSIjMzMzIiBzdHJva2Utd2lkdGg9IjMiLz4KPHRleHQgeD0iMTAwIiB5PSIxMzAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzY2NiI+U2FoaXdhbDwvdGV4dD4KPC9zdmc+'
+            }
+        };
+
+        // Mock prediction function
+        const predictBreed = (imageFile) => {
+            const breeds = Object.keys(breedDatabase);
+            const randomBreed = breeds[Math.floor(Math.random() * breeds.length)];
+            const confidence = Math.floor(Math.random() * 30) + 70; // 70-99% confidence
+            
+            return {
+                breed: randomBreed,
+                confidence: confidence,
+                alternatives: breeds.filter(b => b !== randomBreed).slice(0, 2).map(b => ({
+                    breed: b,
+                    confidence: Math.floor(Math.random() * 20) + 40
+                }))
+            };
+        };
+
+        const BreedIdentifierApp = () => {
+            const [currentView, setCurrentView] = useState('home');
+            const [selectedImage, setSelectedImage] = useState(null);
+            const [prediction, setPrediction] = useState(null);
+            const [history, setHistory] = useState([]);
+            const [loading, setLoading] = useState(false);
+            const fileInputRef = useRef(null);
+            const cameraInputRef = useRef(null);
+
+            const handleImageUpload = (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        setSelectedImage(e.target.result);
+                        setLoading(true);
+                        
+                        // Simulate AI processing delay
+                        setTimeout(() => {
+                            const result = predictBreed(file);
+                            setPrediction(result);
+                            setLoading(false);
+                            setCurrentView('result');
+                            
+                            // Add to history
+                            const historyItem = {
+                                id: Date.now(),
+                                image: e.target.result,
+                                prediction: result,
+                                timestamp: new Date().toLocaleString()
+                            };
+                            setHistory(prev => [historyItem, ...prev]);
+                        }, 2000);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+
+            const HomeView = () => (
+                <div className="min-h-screen gradient-bg">
+                    <div className="container mx-auto px-4 py-8">
+                        <div className="text-center mb-12">
+                            <h1 className="text-4xl font-bold text-white mb-4">
+                                <i className="fas fa-cow mr-3"></i>
+                                Cattle Breed Identifier
+                            </h1>
+                            <p className="text-xl text-white opacity-90">
+                                Identify cattle breeds instantly with AI-powered recognition
+                            </p>
+                        </div>
+
+                        <div className="max-w-md mx-auto space-y-6">
+                            <div className="bg-white rounded-2xl p-8 card-shadow">
+                                <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
+                                    Upload or Capture Image
+                                </h2>
+                                
+                                <div className="space-y-4">
+                                    <button
+                                        onClick={() => cameraInputRef.current?.click()}
+                                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-xl transition duration-300 flex items-center justify-center"
+                                    >
+                                        <i className="fas fa-camera mr-3"></i>
+                                        Take Photo
+                                    </button>
+                                    
+                                    <button
+                                        onClick={() => fileInputRef.current?.click()}
+                                        className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-4 px-6 rounded-xl transition duration-300 flex items-center justify-center"
+                                    >
+                                        <i className="fas fa-upload mr-3"></i>
+                                        Upload from Gallery
+                                    </button>
+                                </div>
+
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleImageUpload}
+                                    className="hidden"
+                                />
+                                
+                                <input
+                                    ref={cameraInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    capture="environment"
+                                    onChange={handleImageUpload}
+                                    className="hidden"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <button
+                                    onClick={() => setCurrentView('breeds')}
+                                    className="bg-white hover:bg-gray-50 text-gray-800 font-semibold py-4 px-4 rounded-xl transition duration-300 card-shadow"
+                                >
+                                    <i className="fas fa-book mb-2 text-2xl text-purple-600"></i>
+                                    <div>Browse Breeds</div>
+                                </button>
+                                
+                                <button
+                                    onClick={() => setCurrentView('history')}
+                                    className="bg-white hover:bg-gray-50 text-gray-800 font-semibold py-4 px-4 rounded-xl transition duration-300 card-shadow"
+                                >
+                                    <i className="fas fa-history mb-2 text-2xl text-orange-600"></i>
+                                    <div>History</div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            const LoadingView = () => (
+                <div className="min-h-screen gradient-bg flex items-center justify-center">
+                    <div className="bg-white rounded-2xl p-8 card-shadow text-center">
+                        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                        <h2 className="text-2xl font-bold text-gray-800 mb-2">Analyzing Image...</h2>
+                        <p className="text-gray-600">Our AI is identifying the breed</p>
+                    </div>
+                </div>
+            );
+
+            const ResultView = () => {
+                const breedInfo = breedDatabase[prediction.breed];
+                
+                return (
+                    <div className="min-h-screen bg-gray-50">
+                        <div className="bg-white shadow-sm">
+                            <div className="container mx-auto px-4 py-4 flex items-center">
+                                <button
+                                    onClick={() => setCurrentView('home')}
+                                    className="text-blue-600 hover:text-blue-800 mr-4"
+                                >
+                                    <i className="fas fa-arrow-left text-xl"></i>
+                                </button>
+                                <h1 className="text-2xl font-bold text-gray-800">Identification Result</h1>
+                            </div>
+                        </div>
+
+                        <div className="container mx-auto px-4 py-8">
+                            <div className="max-w-4xl mx-auto">
+                                <div className="grid md:grid-cols-2 gap-8">
+                                    <div className="space-y-6">
+                                        <div className="bg-white rounded-2xl p-6 card-shadow">
+                                            <h2 className="text-xl font-bold text-gray-800 mb-4">Uploaded Image</h2>
+                                            <img
+                                                src={selectedImage}
+                                                alt="Uploaded cattle"
+                                                className="w-full h-64 object-cover rounded-xl"
+                                            />
+                                        </div>
+
+                                        <div className="bg-white rounded-2xl p-6 card-shadow">
+                                            <h2 className="text-xl font-bold text-gray-800 mb-4">Alternative Predictions</h2>
+                                            <div className="space-y-3">
+                                                {prediction.alternatives.map((alt, index) => (
+                                                    <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                                        <span className="font-medium">{alt.breed}</span>
+                                                        <span className="text-sm text-gray-600">{alt.confidence}%</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-6">
+                                        <div className="bg-white rounded-2xl p-6 card-shadow">
+                                            <div className="flex items-center justify-between mb-4">
+                                                <h2 className="text-2xl font-bold text-gray-800">{breedInfo.name}</h2>
+                                                <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">
+                                                    {prediction.confidence}% Confidence
+                                                </div>
+                                            </div>
+                                            
+                                            <img
+                                                src={breedInfo.image}
+                                                alt={breedInfo.name}
+                                                className="w-full h-48 object-cover rounded-xl mb-4"
+                                            />
+
+                                            <div className="space-y-4">
+                                                <div>
+                                                    <h3 className="font-semibold text-gray-800 mb-1">Origin</h3>
+                                                    <p className="text-gray-600">{breedInfo.origin}</p>
+                                                </div>
+                                                
+                                                <div>
+                                                    <h3 className="font-semibold text-gray-800 mb-1">Type</h3>
+                                                    <p className="text-gray-600">{breedInfo.type}</p>
+                                                </div>
+                                                
+                                                <div>
+                                                    <h3 className="font-semibold text-gray-800 mb-1">Milk Yield</h3>
+                                                    <p className="text-gray-600">{breedInfo.milkYield}</p>
+                                                </div>
+                                                
+                                                <div>
+                                                    <h3 className="font-semibold text-gray-800 mb-1">Characteristics</h3>
+                                                    <p className="text-gray-600">{breedInfo.characteristics}</p>
+                                                </div>
+                                                
+                                                <div>
+                                                    <h3 className="font-semibold text-gray-800 mb-1">Care Tips</h3>
+                                                    <p className="text-gray-600">{breedInfo.care}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex space-x-4">
+                                            <button
+                                                onClick={() => setCurrentView('home')}
+                                                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition duration-300"
+                                            >
+                                                <i className="fas fa-camera mr-2"></i>
+                                                Identify Another
+                                            </button>
+                                            
+                                            <button className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-xl transition duration-300">
+                                                <i className="fas fa-share mr-2"></i>
+                                                Share Result
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            const BreedsView = () => (
+                <div className="min-h-screen bg-gray-50">
+                    <div className="bg-white shadow-sm">
+                        <div className="container mx-auto px-4 py-4 flex items-center">
+                            <button
+                                onClick={() => setCurrentView('home')}
+                                className="text-blue-600 hover:text-blue-800 mr-4"
+                            >
+                                <i className="fas fa-arrow-left text-xl"></i>
+                            </button>
+                            <h1 className="text-2xl font-bold text-gray-800">Cattle Breeds Database</h1>
+                        </div>
+                    </div>
+
+                    <div className="container mx-auto px-4 py-8">
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {Object.entries(breedDatabase).map(([key, breed]) => (
+                                <div key={key} className="bg-white rounded-2xl p-6 card-shadow breed-card">
+                                    <img
+                                        src={breed.image}
+                                        alt={breed.name}
+                                        className="w-full h-48 object-cover rounded-xl mb-4"
+                                    />
+                                    
+                                    <h3 className="text-xl font-bold text-gray-800 mb-2">{breed.name}</h3>
+                                    <p className="text-gray-600 mb-3">{breed.origin}</p>
+                                    
+                                    <div className="space-y-2 text-sm">
+                                        <div className="flex justify-between">
+                                            <span className="font-medium">Type:</span>
+                                            <span className="text-gray-600">{breed.type}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="font-medium">Milk Yield:</span>
+                                            <span className="text-gray-600">{breed.milkYield}</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <p className="text-gray-600 text-sm mt-3 line-clamp-3">{breed.characteristics}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+
+            const HistoryView = () => (
+                <div className="min-h-screen bg-gray-50">
+                    <div className="bg-white shadow-sm">
+                        <div className="container mx-auto px-4 py-4 flex items-center">
+                            <button
+                                onClick={() => setCurrentView('home')}
+                                className="text-blue-600 hover:text-blue-800 mr-4"
+                            >
+                                <i className="fas fa-arrow-left text-xl"></i>
+                            </button>
+                            <h1 className="text-2xl font-bold text-gray-800">Identification History</h1>
+                        </div>
+                    </div>
+
+                    <div className="container mx-auto px-4 py-8">
+                        {history.length === 0 ? (
+                            <div className="text-center py-12">
+                                <i className="fas fa-history text-6xl text-gray-300 mb-4"></i>
+                                <h2 className="text-2xl font-bold text-gray-600 mb-2">No History Yet</h2>
+                                <p className="text-gray-500">Start identifying breeds to see your history here</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-6">
+                                {history.map((item) => (
+                                    <div key={item.id} className="bg-white rounded-2xl p-6 card-shadow">
+                                        <div className="flex items-start space-x-4">
+                                            <img
+                                                src={item.image}
+                                                alt="Historical identification"
+                                                className="w-24 h-24 object-cover rounded-xl"
+                                            />
+                                            
+                                            <div className="flex-1">
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <h3 className="text-xl font-bold text-gray-800">
+                                                        {breedDatabase[item.prediction.breed].name}
+                                                    </h3>
+                                                    <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm font-semibold">
+                                                        {item.prediction.confidence}%
+                                                    </span>
+                                                </div>
+                                                
+                                                <p className="text-gray-600 mb-2">{item.timestamp}</p>
+                                                <p className="text-gray-700">{breedDatabase[item.prediction.breed].characteristics}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+
+            if (loading) return <LoadingView />;
+
+            switch (currentView) {
+                case 'result':
+                    return <ResultView />;
+                case 'breeds':
+                    return <BreedsView />;
+                case 'history':
+                    return <HistoryView />;
+                default:
+                    return <HomeView />;
+            }
+        };
+
+        ReactDOM.render(<BreedIdentifierApp />, document.getElementById('root'));
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9816ddbe003c801f',t:'MTc1ODI2MTY2Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
